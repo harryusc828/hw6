@@ -327,14 +327,20 @@ HashTable<K,V,Prober,Hash,KEqual>::~HashTable()
 template<typename K, typename V, typename Prober, typename Hash, typename KEqual>
 bool HashTable<K,V,Prober,Hash,KEqual>::empty() const
 {
-    return (num_insert == 0); 
+    return (this -> size() == 0); 
 }
 
 // To be completed
 template<typename K, typename V, typename Prober, typename Hash, typename KEqual>
 size_t HashTable<K,V,Prober,Hash,KEqual>::size() const
 {
-    return (num_insert - num_del); 
+    size_t target = 0; 
+    for(size_t i = 0; i < CAPACITIES[mIndex_]; i++){
+        if(table_[i] != nullptr && (table_[i] -> deleted != true)){
+            target++; 
+        }
+    }
+    return target; 
 }
 
 // To be completed
@@ -343,24 +349,25 @@ void HashTable<K,V,Prober,Hash,KEqual>::insert(const ItemType& p)
 {
 
 
-    if((num_insert /  mIndex_) >= Alpha){
+    if((num_insert /  CAPACITIES [mIndex_]) >= Alpha){
         this -> resize(); 
     }
     //now there is empty space
-    cout << "ha" << endl; 
     HASH_INDEX_T index = this -> probe(p.first); 
-    cout << "ye" << endl; 
-    if(index != npos){
+    if(index == npos){
+        throw std::logic_error("returned npos");
+    }
+    else{
         if(table_[index] == nullptr){
             table_[index] = new HashItem(p); 
+            num_insert ++; 
         }
         else{
             table_[index] -> item.second = p.second; 
+            num_insert ++; 
         }
-        num_insert ++; 
+
     }
-
-
 
 }
 
@@ -368,13 +375,11 @@ void HashTable<K,V,Prober,Hash,KEqual>::insert(const ItemType& p)
 template<typename K, typename V, typename Prober, typename Hash, typename KEqual>
 void HashTable<K,V,Prober,Hash,KEqual>::remove(const KeyType& key)
 {
-
-    HASH_INDEX_T index = this -> probe(key);
-    if(index != npos && table_[index] != nullptr){
-        table_[index] -> deleted = true; 
-        num_del ++; 
+    HashItem * target = internalFind(key);
+    if(target != nullptr){
+        target -> deleted = true; 
     }
-
+    return; 
 
 }
 
@@ -454,15 +459,16 @@ void HashTable<K,V,Prober,Hash,KEqual>::resize()
     vector<HashItem*> temp(new_size, nullptr); 
     vector<HashItem*> new_vec = table_;
     table_ = temp; 
-    num_insert =0; 
-    num_del = 0; 
+    num_insert = 0.0; 
+    num_del = 0.0; 
     for(size_t i = 0; i < new_vec.size(); i++){
         if(new_vec[i] != nullptr){
             if(new_vec[i] -> deleted == true){
                 delete new_vec[i]; 
             }
             else{
-            this -> insert(new_vec[i] -> item); 
+                this -> insert(new_vec[i] -> item); 
+                delete new_vec[i]; 
             }
         }
     }

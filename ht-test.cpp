@@ -22,9 +22,7 @@ int main()
     for(size_t i = 0; i < 10; i++){
         std::stringstream ss;
         ss << "hi" << i;
-        cout << "lol" << endl; 
         ht.insert({ss.str(), i});
-        cout << "here lol " << endl; 
     }
     if( ht.find("hi1") != nullptr ){
         cout << "Found hi1" << endl;
